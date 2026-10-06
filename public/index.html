@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CampusTask</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="card">
+    <h1>CampusTask</h1>
+    <p class="subtitle">A simple task manager for students</p>
+
+    <form id="task-form" autocomplete="off">
+      <input id="task-input" type="text" placeholder="Add a new task..." maxlength="100" aria-label="New task">
+      <button type="submit">Add</button>
+    </form>
+    <p id="error" class="error" role="alert"></p>
+
+    <div class="filters" id="filters">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="active">Active</button>
+      <button data-filter="completed">Completed</button>
+    </div>
+
+    <ul id="task-list"></ul>
+    <p id="empty" class="empty">No tasks yet. Add one above!</p>
+
+    <div class="summary">
+      <span id="count">0 tasks left</span>
+      <button id="clear-completed" class="link">Clear completed</button>
+    </div>
+  </main>
+  <footer>Version: <span id="version">__APP_VERSION__</span> &middot; Database: <span id="db-status">checking</span></footer>
+
+  <script src="js/tasks.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

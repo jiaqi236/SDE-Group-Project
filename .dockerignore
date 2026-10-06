@@ -1,0 +1,8 @@
+node_modules
+coverage
+.git
+tests
+Jenkinsfile
+scripts
+*.md
+docker-compose.yml

@@ -1,0 +1,25 @@
+{
+  "name": "campustask",
+  "version": "2.0.0",
+  "description": "CampusTask - task manager (HTML/CSS/JS + Express + PostgreSQL) used to demonstrate a Jenkins + Docker + AWS CI/CD pipeline (SWE40006)",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "test": "jest --coverage"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "pg-mem": "^3.0.5",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": ["server/**/*.js", "public/js/tasks.js", "!server/index.js"],
+    "coverageThreshold": { "global": { "lines": 70 } }
+  }
+}
