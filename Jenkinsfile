@@ -11,7 +11,7 @@ pipeline {
   agent any
 
   environment {
-    DOCKERHUB_USER = 'jiaqi_0623'          // <-- change
+    DOCKERHUB_USER = 'jiaqi0623'          // <-- change
     IMAGE          = "${DOCKERHUB_USER}/campustask"
     TAG            = "${BUILD_NUMBER}"
     PROD_HOST      = 'ec2-user@YOUR_EC2_PUBLIC_IP'      // <-- change (production EC2 instance)
