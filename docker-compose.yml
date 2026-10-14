@@ -27,7 +27,7 @@ services:
       DB_PASSWORD: localpassword
       DB_SSL: "false"
     ports:
-      - "8080:3000"
+      - "8080:3000"  # LAPTOP:CONTAINER, forward laptop's port 8080 → the container's port 3000
     depends_on:
       db:
         condition: service_healthy
