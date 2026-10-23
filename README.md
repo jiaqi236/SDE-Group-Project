@@ -26,7 +26,7 @@ Developer ──(git push)──► GitHub ──(Webhook)──► Jenkins (EC2
         App + Local PostgreSQL                                      App + Amazon RDS
         (Automated Smoke Tests)                                     (Health Check / Rollback)
 ```
-## 4. Jenkins Credentials
+## 2. Jenkins Credentials
 
 Ensure the following 4 credentials are configured in Jenkins (`Manage Jenkins > Credentials > Global`):
 
@@ -37,7 +37,7 @@ Ensure the following 4 credentials are configured in Jenkins (`Manage Jenkins > 
 
 ---
 
-## 5. CI/CD Pipeline Stages
+## 3. CI/CD Pipeline Stages
 
 1. **Checkout:** Jenkins pulls code from the `main` branch.
 2. **Unit Tests:** Jest runs tests inside a `node:20-alpine` container.
@@ -51,7 +51,7 @@ Ensure the following 4 credentials are configured in Jenkins (`Manage Jenkins > 
 
 ---
 
-## 6. CloudWatch Monitoring
+## 4. CloudWatch Monitoring
 
 - **Dashboard:** `CampusTask-Production`
 - **Basic Metrics:** `CPUUtilization`, `NetworkIn/Out`, `DiskReadOps`
@@ -59,7 +59,7 @@ Ensure the following 4 credentials are configured in Jenkins (`Manage Jenkins > 
 
 ---
 
-## 7. Expected Demonstration Outcomes
+## 5. Expected Demonstration Outcomes
 
 During the presentation, the system will demonstrate the following expected outcomes:
 
