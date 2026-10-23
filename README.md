@@ -42,12 +42,12 @@ Ensure the following 4 credentials are configured in Jenkins (`Manage Jenkins > 
 1. **Checkout:** Jenkins pulls code from the `main` branch.
 2. **Unit Tests:** Jest runs tests inside a `node:20-alpine` container.
 3. **Build Docker Image:** Tagged with the build number and `latest`.
-4. **Push to Docker Hub.**
+4. **Push to Docker Hub.:**  The image is published to the registry.
 5. **Deploy to Test:** `deploy.sh` spins up a local Postgres container and runs the app on port 8081.
 6. **Automated Tests:** `smoke-test.sh` verifies CRUD operations on the Test environment.
 7. **Deploy to Production:** Jenkins SSHes into EC2 #2, passes RDS credentials securely, and deploys the image to port 80.
 8. **Verify Production:** Smoke tests hit the live Elastic IP to confirm health.
-9. **Rollback:** If the production health check fails, `deploy.sh` automatically restores the previous stable image.
+9. **Rollback:** If the production health check fails, `deploy.sh` will automatically halt the deployment and restore the previous stable Docker image.
 
 ---
 
@@ -59,22 +59,18 @@ Ensure the following 4 credentials are configured in Jenkins (`Manage Jenkins > 
 
 ---
 
-## 7. Demonstration Plan (Presentation)
+## 7. Expected Demonstration Outcomes
 
-1. Show the production site (`http://13.213.98.45`) and verify the version number and Database status.
-2. Create a task to show data persistence (saved in RDS, not the container).
-3. Open the CloudWatch dashboard and note the baseline metrics.
-4. Change a UI heading locally, commit, and `git push`.
-5. Watch Jenkins automatically trigger and execute all stages.
-6. Show the CloudWatch CPU spike as the new production container spins up.
-7. Refresh the production site to show the new version and the previously created task still exists.
-8. **Failing Test:** Push a broken test to show Jenkins halting the deployment.
-9. **Rollback:** Push a broken code change (e.g., DB connection string) to show `deploy.sh` automatically rolling back to the safe version.
+During the presentation, the system will demonstrate the following expected outcomes:
+
+1. **Production Accessibility:** The website at `http://13.213.98.45` will load successfully, displaying the current build version and a `Database: up` status.
+2. **Data Persistence:** Creating a task on the website will save data directly to Amazon RDS, ensuring it survives container redeployments.
+3. **Monitoring Baseline:** The CloudWatch dashboard will display steady baseline performance metrics for the production server.
+4. **Automated Trigger:** Modifying a UI element and pushing to GitHub will instantly trigger the Jenkins pipeline without manual intervention.
+5. **Pipeline Execution:** Jenkins will successfully execute all stages (Build, Test, Push, Deploy) and turn green.
+6. **Deployment Monitoring:** The CloudWatch dashboard will capture a CPU spike on EC2 #2 as the new production container initializes.
+7. **Zero-Downtime Validation:** Refreshing the production site will reflect the new UI version, and the previously created task will remain intact.
+8. **Failure Prevention:** Pushing code with a broken unit test will cause Jenkins to fail at the testing stage, preventing the buggy code from reaching production.
+9. **Automated Rollback:** Pushing code with a fatal runtime error (e.g., invalid DB string) will cause the production health check to fail, prompting `deploy.sh` to automatically revert to the previous stable version.
 
 ---
-
-## 8. Troubleshooting
-
-- **`/health` returns 503 or triggers rollback:** Check RDS security group (must allow EC2 #2), verify `rds-endpoint` and `rds-db-creds` in Jenkins.
-- **Jenkins fails `docker: command not found`:** Ensure Jenkins is in the docker group (`sudo usermod -aG docker jenkins`) and restarted.
-- **CloudWatch missing Memory/Disk metrics:** Verify the IAM role is attached to EC2 #2 and the CloudWatch agent is running (`sudo systemctl status amazon-cloudwatch-agent`).
