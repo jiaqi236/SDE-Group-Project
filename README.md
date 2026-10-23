@@ -1,228 +1,408 @@
-# CampusTask – CI/CD Pipeline Project (SWE40006)
+CampusTask – CI/CD Pipeline Project (SWE40006)
 
-A task manager built with **HTML/CSS/JavaScript** (front end), **Node.js + Express** (REST API)
-and **PostgreSQL** (database), deployed through a
-**GitHub → Jenkins → Docker → Docker Hub → Test → AWS EC2 + Amazon RDS** pipeline with
-**AWS CloudWatch** instrumentation.
+A task manager built with HTML, CSS, and JavaScript (front end), Node.js + Express (REST API), and PostgreSQL (database).
 
-```
-Browser ──► Express container (serves the web page + /api/tasks + /health) ──► PostgreSQL
-                                                                  Test:       PostgreSQL container
-                                                                  Production: Amazon RDS
-                                                                  Monitoring: AWS CloudWatch
-```
+The application is deployed through a GitHub → Jenkins → Docker → Docker Hub → Test → AWS EC2 + Amazon RDS CI/CD pipeline, with AWS CloudWatch instrumentation.
 
-## Project structure
+Application Architecture
+Browser
+   |
+   v
+Express Container
+(Serves the web page, /api/tasks, and /health)
+   |
+   v
+PostgreSQL
 
-| Path | Purpose |
-|---|---|
-| `public/` | Front end: `index.html`, `style.css`, `js/app.js` (UI, calls the API), `js/tasks.js` (validation helpers) |
-| `server/` | Back end: `app.js` (routes), `repo-pg.js` (PostgreSQL), `repo-memory.js` (dev only), `index.js` (start-up) |
-| `tests/` | Jest unit tests (helpers, REST API with Supertest, SQL layer with pg-mem) |
-| `Dockerfile` | Packages the app (Node 20 Alpine) |
-| `docker-compose.yml` | Runs app + PostgreSQL locally with one command |
-| `Jenkinsfile` | The pipeline (pipeline-as-code) |
-| `scripts/deploy.sh` | Deploys an image, health-checks app + database, rolls back automatically on failure |
-| `scripts/smoke-test.sh` | Automated checks incl. create/read/update/delete through the database |
+Testing: PostgreSQL container
+Production: Amazon RDS PostgreSQL
+Monitoring: AWS CloudWatch
+Project Structure
+Path	Purpose
+public/	Front end: index.html, style.css, js/app.js (UI and API calls), and js/tasks.js (validation helpers)
+server/	Back end: app.js (routes), repo-pg.js (PostgreSQL), repo-memory.js (development only), and index.js (startup)
+tests/	Jest unit tests, REST API tests with Supertest, and SQL-layer tests with pg-mem
+Dockerfile	Packages the application using Node.js 20 Alpine
+docker-compose.yml	Runs the application and PostgreSQL locally
+Jenkinsfile	Defines the CI/CD pipeline as code
+scripts/deploy.sh	Deploys an image, health-checks the application and database, and automatically rolls back on failure
+scripts/smoke-test.sh	Runs automated checks, including create/read/update/delete operations through the database
+API Endpoints
+Method	Endpoint	Description
+GET	/api/tasks	Lists all tasks
+POST	/api/tasks	Creates a task using {"title":"..."}. Title must contain 1–100 characters.
+PATCH	/api/tasks/:id	Marks a task as done or not done using {"done":true}
+DELETE	/api/tasks/:id	Deletes a task
+DELETE	/api/tasks/completed	Deletes all completed tasks
+GET	/health	Returns 200 {"status":"ok","database":"up"} or 503 if the database is unreachable
+Database Schema
 
-### API
+The database table is created automatically during application startup.
 
-| Method & path | Action |
-|---|---|
-| `GET /api/tasks` | List tasks |
-| `POST /api/tasks` `{"title":"..."}` | Create a task (1–100 characters) |
-| `PATCH /api/tasks/:id` `{"done":true}` | Mark done / not done |
-| `DELETE /api/tasks/:id` | Delete a task |
-| `DELETE /api/tasks/completed` | Delete all completed tasks |
-| `GET /health` | `200 {"status":"ok","database":"up"}` or `503` when the database is unreachable |
+CREATE TABLE tasks (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(100),
+    done BOOLEAN,
+    created_at TIMESTAMPTZ
+);
 
-Database table (created automatically on start-up): `tasks(id SERIAL PK, title VARCHAR(100), done BOOLEAN, created_at TIMESTAMPTZ)`.
+1. Run the Application Locally
+Important: Do not open index.html by double-clicking it. Tasks are retrieved through the API, so the server must be running. Open the application through its local HTTP address instead.
+Option A: Run Without Docker or PostgreSQL
 
-## 1. Run it locally
+This option uses in-memory storage, so task data is not persistent.
 
-> The page **cannot** be opened by double-clicking `index.html`, because tasks now come from the API.
-> Always start the server and open it through `http://localhost`.
-
-**Option A – quickest, no Docker or database needed (data kept in memory only):**
-```bash
 npm install
-npm run dev            # open http://localhost:3000
-npm test               # unit tests
-```
+npm run dev
 
-**Option B – with a real PostgreSQL (needs Docker Desktop):**
-```bash
-docker compose up --build      # open http://localhost:8080
-```
 
-## 2. One-time infrastructure setup (AWS)
+Open the application at:
 
-You need **two EC2 instances**, **one RDS database**, and **CloudWatch monitoring**, all in the
-same region and the same VPC (the default VPC is fine).
+http://localhost:3000
 
-| Resource | Purpose |
-|---|---|
-| EC2 #1 `jenkins-server` | Jenkins + the **Test** environment (app on port 8081 + a PostgreSQL container) |
-| EC2 #2 `prod-server` | **Production**: runs the app container on port 80 + CloudWatch agent |
-| RDS `campustask-db` | **Production** PostgreSQL database (private, EC2 #2 only) |
-| CloudWatch `CampusTask-Production` | **Level 2 instrumentation** — CPU, memory, network, disk dashboard |
 
-### A. Docker Hub
-1. Create an account and a public repository named `campustask`.
-2. Account Settings > Security > create an **access token** (used as the password in Jenkins).
+Run the unit tests:
 
-### B. Production EC2 (`prod-server`, Amazon Linux 2023, t3.micro)
-1. Security group `prod-sg`: inbound **SSH 22** (from the Jenkins server's IP only) and **HTTP 80** (anywhere).
-2. Install Docker:
-   ```bash
-   sudo dnf install -y docker && sudo systemctl enable --now docker
-   sudo usermod -aG docker ec2-user      # log out and in again afterwards
-   ```
-3. Add the Jenkins server's public SSH key to `~/.ssh/authorized_keys` so the pipeline can deploy.
+npm test
 
-### C. Amazon RDS PostgreSQL (production database)
-1. EC2 > Security Groups > create **`rds-sg`** in the same VPC with one inbound rule:
-   **PostgreSQL, port 5432, source = `prod-sg`** (the security group, not an IP, and *not* "anywhere").
-2. RDS > **Create database** > Standard create:
-   - Engine: **PostgreSQL** (16.x) · Template: **Free tier** (or Dev/Test)
-   - DB instance identifier: `campustask-db`
-   - Master username: `campustask` · set a strong password and keep it safe
-   - Instance class: `db.t3.micro` (or `db.t4g.micro`) · Storage: 20 GiB gp3, **disable storage autoscaling**
-   - Connectivity: same VPC as `prod-server` · **Public access: No** · VPC security group: `rds-sg`
-   - **Additional configuration > Initial database name: `campustask`** (easy to miss!)
-   - Disable Multi-AZ and Performance Insights (cost); keep automated backups (1 day is enough)
-3. Wait until the status is **Available**, then copy the **Endpoint** (looks like `campustask-db.xxxx.<region>.rds.amazonaws.com`).
-4. (Optional check) from `prod-server`:
-   ```bash
-   sudo dnf install -y postgresql15
-   psql "host=<ENDPOINT> user=campustask dbname=campustask sslmode=require"
-   ```
-   If this times out, the security group rule in step 1 is wrong.
+Option B: Run with PostgreSQL Using Docker
 
-### D. AWS CloudWatch instrumentation (Level 2)
+This option requires Docker Desktop.
 
-**Basic metrics (default, no setup required):**
-1. Open CloudWatch → **Metrics** → **EC2** → **Per-Instance Metrics**.
-2. Select `campustask-production` (EC2 #2).
-3. Confirm `CPUUtilization`, `NetworkIn`, `NetworkOut`, `DiskReadOps` are populating (allow 5 minutes for the first data points).
+docker compose up --build
 
-**Dashboard:**
-1. CloudWatch → **Dashboards** → **Create dashboard** → name it `CampusTask-Production`.
-2. Add a **Line** widget → select the four metrics above.
-3. Save the dashboard and share the URL with the team.
 
-**Optional: CloudWatch agent (memory + disk space)**
+Open the application at:
 
-Basic EC2 metrics do not include memory usage or EBS disk space. To capture them, install the CloudWatch agent on `prod-server`:
-```bash
+http://localhost:8080
+
+2. One-Time Infrastructure Setup (AWS)
+
+The infrastructure consists of two EC2 instances, one Amazon RDS database, and CloudWatch monitoring. All resources should be configured in the same AWS Region and VPC. The default VPC can be used.
+
+Infrastructure Overview
+Resource	Purpose
+EC2 #1: jenkins-server	Hosts Jenkins and the testing environment, including the application on port 8081 and a PostgreSQL container
+EC2 #2: prod-server	Hosts the production application on port 80 and the CloudWatch agent
+RDS: campustask-db	Production PostgreSQL database, accessible privately from the production EC2 instance
+CloudWatch: CampusTask-Production	Monitoring dashboard for CPU, memory, network, and disk metrics
+
+Note: Elastic IP addresses are assigned to both EC2 instances to provide stable public IP addresses across instance reboots.
+
+A. Docker Hub Setup
+Create a Docker Hub account.
+Create a public repository named campustask.
+Navigate to Account Settings → Security.
+Create an access token to use as the password for Jenkins authentication.
+B. Production EC2 Setup
+
+Instance: prod-server
+
+Operating system: Amazon Linux 2023
+Instance type: t3.micro
+
+Configure the production security group, prod-sg, with the following inbound rules:
+
+Protocol	Port	Source
+SSH	22	Jenkins server's public IP address
+HTTP	80	0.0.0.0/0
+
+Install and enable Docker:
+
+sudo dnf install -y docker
+sudo systemctl enable --now docker
+sudo usermod -aG docker ec2-user
+
+
+Log out and log back in for the Docker group membership to take effect.
+
+Add the Jenkins server's public SSH key to the production instance's ~/.ssh/authorized_keys file so Jenkins can deploy the application.
+
+C. Amazon RDS PostgreSQL Setup
+
+Amazon RDS stores production task data independently of the application container.
+
+1. Configure the RDS Security Group
+
+Navigate to EC2 → Security Groups and create a security group named rds-sg in the same VPC.
+
+Configure the following inbound rule:
+
+Type	Port	Source
+PostgreSQL	5432	prod-sg security group
+
+Use the security group as the source, not an IP address or 0.0.0.0/0.
+
+2. Create the RDS Database
+
+Navigate to RDS → Create database and select Standard create.
+
+Setting	Value
+Engine	PostgreSQL 16.x
+Template	Free tier or Dev/Test, as available
+DB instance identifier	campustask-db
+Master username	campustask
+Instance class	db.t3.micro or db.t4g.micro, subject to availability and eligibility
+Storage	20 GiB gp3
+Storage autoscaling	Disabled
+VPC	Same VPC as prod-server
+Public access	No
+VPC security group	rds-sg
+Initial database name	campustask
+
+Set a strong database password and store it securely.
+
+For a cost-conscious student project, disable Multi-AZ and Performance Insights if appropriate. Keep automated backups enabled, with a one-day retention period if supported by the selected configuration.
+
+Wait until the database status becomes Available, then copy its endpoint. It should look similar to:
+
+campustask-db.xxxx.<region>.rds.amazonaws.com
+
+3. Optional Database Connectivity Check
+
+Run the following commands on prod-server:
+
+sudo dnf install -y postgresql15
+
+
+Connect using the actual RDS endpoint:
+
+psql "host=<ENDPOINT> user=campustask dbname=campustask sslmode=require"
+
+
+Replace <ENDPOINT> with the real RDS endpoint.
+
+If the connection times out, check the RDS security group, VPC configuration, routing, and network connectivity. If authentication fails, verify the username and password.
+
+D. AWS CloudWatch Instrumentation (Level 2)
+1. Basic EC2 Metrics
+
+Basic EC2 metrics are available in CloudWatch without installing an agent.
+
+Open CloudWatch → Metrics → EC2 → Per-Instance Metrics.
+Select the production EC2 instance.
+Confirm that the following metrics are being populated:
+CPUUtilization
+NetworkIn
+NetworkOut
+DiskReadOps
+
+Allow approximately five minutes for initial metric data to appear.
+
+2. Create the CloudWatch Dashboard
+Navigate to CloudWatch → Dashboards.
+Create a dashboard named CampusTask-Production.
+Add a line widget.
+Select the relevant EC2 metrics.
+Save the dashboard and share its URL with the team.
+3. Optional: Monitor Memory and Disk Usage
+
+Default EC2 metrics do not include guest operating system memory utilization or filesystem disk usage.
+
+Install the CloudWatch agent on prod-server:
+
 sudo dnf install -y amazon-cloudwatch-agent
+
+
+Run the configuration wizard:
+
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard
-# select default metrics, add mem_used_percent and disk_used_percent
+
+
+Select the required metrics, including:
+
+mem_used_percent
+disk_used_percent
+
+Enable and start the agent:
+
 sudo systemctl enable --now amazon-cloudwatch-agent
-```
-The agent requires an **IAM role** attached to `prod-server` with the `CloudWatchAgentServerPolicy` policy so it can publish metrics.
 
-### E. Jenkins server (`jenkins-server`, Ubuntu 22.04, t3.medium)
-1. Security group: inbound **SSH 22** and **8080** (Jenkins) from your IP only; **8081** from your IP (to view the Test site).
-2. Install Java 17, Docker and Jenkins, then let Jenkins use Docker:
-   ```bash
-   sudo usermod -aG docker jenkins && sudo systemctl restart jenkins
-   ```
-3. Install plugins: Pipeline, Git, GitHub, Credentials Binding, **SSH Agent**, Docker Pipeline.
-4. Add credentials (Manage Jenkins > Credentials > Global). IDs must match exactly:
 
-   | ID | Kind | Value |
-   |---|---|---|
-   | `dockerhub-creds` | Username with password | Docker Hub username + access token |
-   | `ec2-ssh-key` | SSH Username with private key | user `ec2-user` + private key for `prod-server` |
-   | `rds-endpoint` | Secret text | the RDS endpoint from step C3 |
-   | `rds-db-creds` | Username with password | `campustask` + the RDS password |
+Attach an IAM role to prod-server with the CloudWatchAgentServerPolicy policy, or an appropriately scoped custom policy, so the agent can publish metrics.
 
-### F. GitHub
-1. Push this project to a GitHub repository (branch `main`).
-2. Repository Settings > Webhooks > add `http://<JENKINS_IP>:8080/github-webhook/` (content type JSON, event: push).
-3. In Jenkins create a **Multibranch Pipeline** (or a Pipeline job "from SCM", branch `*/main`) and tick
-   *GitHub hook trigger for GITScm polling*.
+Add the memory and disk metrics to the dashboard.
 
-### G. Edit the Jenkinsfile
-Replace `your-dockerhub-username` and `YOUR_EC2_PUBLIC_IP` (the production server) in the `environment` block.
+E. Jenkins Server Setup
 
-## 3. How the pipeline works
+Instance: jenkins-server
 
-1. **Checkout** – Jenkins pulls the code.
-2. **Unit Tests** – Jest runs inside a `node:20-alpine` container (Supertest for the API, pg-mem for the SQL); fails if coverage is below 70%.
-3. **Build Docker Image** – tagged with the build number and `latest`; the number appears in the page footer.
-4. **Push to Docker Hub**.
-5. **Deploy to Test** – no `DB_HOST` is set, so `deploy.sh` starts a PostgreSQL container and the app container (port 8081). Test data lives in a Docker volume, never in production.
-6. **Automated tests on Test** – `smoke-test.sh` checks the pages, `/health` (database up) and a full create/read/update/delete cycle.
-7. **Deploy to Production** – only on `main`; Jenkins SSHes to `prod-server` and runs `deploy.sh` with the RDS settings (sent over the SSH connection, not on a command line).
-8. **Verify Production** – the same smoke tests against the public IP.
-9. **CloudWatch monitoring** – while the deploy runs, the `CampusTask-Production` dashboard shows CPU and network activity on EC2 #2, confirming the new container starts cleanly.
+Operating system: Amazon Linux 2023
+Instance type: t3.small
+Storage: 30 GB
 
-If the health check fails (app crash **or** database unreachable), `deploy.sh` restarts the previous image (**rollback**) and the build fails.
+Configure the Jenkins security group to allow:
 
-## 4. Project levels covered
+Port	Purpose
+22	SSH administration
+8080	Jenkins web interface
+8081	Testing application
 
-| Level | Requirement | How we satisfy it |
-|---|---|---|
-| **Level 1** | Four-server pipeline (code repo, CI/build, test, production) | GitHub + Jenkins + Test env + Production EC2 |
-| **Level 2** | Instrumentation of the production server | AWS CloudWatch dashboard + agent (CPU, memory, network, disk) |
-| **Level 3** | Deploy a working application and verify it | CampusTask deployed to EC2 #2 with RDS, `/health` returns OK |
-| **Level 4** | Test automation by changing source code | `git push` triggers the pipeline automatically via webhook |
+Restrict access to Jenkins and SSH to trusted IP addresses wherever possible.
 
-## 5. Demo script (presentation)
+Install Java 17, Docker, and Jenkins according to their official installation instructions.
 
-1. Show the production site: footer shows the build number and `Database: up`. Add a task.
-2. Open the **CloudWatch dashboard** and note the baseline CPU/network activity.
-3. Change a heading or colour, commit and push.
-4. Watch Jenkins run every stage; show test results, coverage, and the new Docker Hub tag.
-5. Show the **CloudWatch CPU spike** on EC2 #2 as the new container starts.
-6. Refresh production: the version has increased **and your task is still there** (data lives in RDS, not in the container).
-7. **Failing test:** add a failing test, push, show the pipeline stops before any deployment.
-8. **Rollback:** push a version that breaks the app (e.g. wrong port in `server/index.js`), show `deploy.sh` rolling back to the previous version.
+Allow Jenkins to use Docker:
 
-## 6. Troubleshooting
+sudo usermod -aG docker jenkins
+sudo systemctl restart jenkins
 
-| Symptom | Likely cause |
-|---|---|
-| Page shows "Start the server and open http://localhost…" | You opened the HTML file directly – run `npm run dev` |
-| Pipeline: `/health` returns 503 / rollback after deploy | Database unreachable: check `rds-sg` allows `prod-sg`, endpoint credential, password, and that the initial database `campustask` was created |
-| `no pg_hba.conf entry … no encryption` | `DB_SSL` must be `true` for RDS (the Jenkinsfile sets this) |
-| `permission denied` running docker in Jenkins | Add `jenkins` to the `docker` group and restart Jenkins |
-| Production stage skipped | The build is not on `main` |
-| `docker logs campustask-prod` | Shows the app's database errors (run on `prod-server`) |
-| CloudWatch dashboard empty | Wait 5 minutes; check you're in the right AWS region; for memory metrics verify the agent is running and the IAM role is attached |
-| CloudWatch agent won't start | Check the IAM role has `CloudWatchAgentServerPolicy` attached |
 
-## 7. Metrics to record for the report
+Troubleshooting note: The Jenkins instance was upgraded from t3.micro to t3.small, and 2 GB of swap memory was configured to reduce the risk of running out of memory during Docker builds.
 
-Build success rate, commit-to-production time (Jenkins stage view), test coverage (Jest output),
-health check results, rollback time, **CloudWatch CPU/memory baseline vs. deploy spike**,
-and proof that data survives a redeploy.
+Install the following Jenkins plugins:
 
-## 8. Architecture summary
+Pipeline
+Git
+GitHub
+Credentials Binding
+SSH Agent
+Docker Pipeline
+Configure Jenkins Credentials
 
-```
-┌───────────────────────────────────────────────────────────┐
-│  EC2 #1 — Jenkins + Test                                  │
-│  Ubuntu 22.04, t3.medium, 30GB                            │
-│                                                           │
-│  ┌──────────┐    ┌──────────────┐   ┌─────────────────┐   │
-│  │ Jenkins  │    │ Test app     │   │ Test PostgreSQL │   │
-│  │ (8080)   │    │ (port 8081)  │──►│ (port 5432)     │   │
-│  └──────────┘    └──────────────┘   └─────────────────┘   │
-└───────────────────────────┬───────────────────────────────┘
-                            │ Jenkins deploys via SSH
-                            ▼
-┌───────────────────────────────────────────────────────────┐
-│  EC2 #2 — Production + CloudWatch                         │
-│  Amazon Linux 2023, t3.micro, 8GB                         │
-│                                                           │
-│  ┌──────────────┐    ┌───────────────┐                    │
-│  │ Production   │───►│ Amazon RDS    │                    │
-│  │ app (port 80)│    │ PostgreSQL    │                    │
-│  └──────┬───────┘    └───────────────┘                    │
-│         │                                                 │
-│         └──► CloudWatch (CPU, mem, net, disk)             │
-└───────────────────────────────────────────────────────────┘
-```
+Navigate to Manage Jenkins → Credentials → Global and add the following credentials.
+
+Credential ID	Kind	Value
+dockerhub-creds	Username with password	Docker Hub username and access token
+ec2-ssh-key	SSH Username with private key	Username ec2-user and the private key used to connect to prod-server
+rds-endpoint	Secret text	RDS endpoint from Section 2C
+rds-db-creds	Username with password	Username campustask and the RDS database password
+
+Credential IDs must match those referenced in the Jenkinsfile.
+
+F. GitHub Setup
+Push the project to a GitHub repository using the main branch.
+Navigate to Repository Settings → Webhooks.
+Add the following webhook URL:
+http://47.131.190.77:8080/github-webhook/
+
+Set the content type to application/json.
+Configure the webhook to trigger on push events.
+In Jenkins, create a Multibranch Pipeline or a Pipeline job configured from SCM.
+Configure the repository URL and branch (*/main).
+Enable the GitHub hook trigger for Git SCM polling if required by the selected job configuration.
+Security note: The webhook URL uses HTTP. For a production-quality setup, use HTTPS with appropriate access controls. Also verify that the public IP address and Jenkins port are correct before configuring the webhook.
+3. How the CI/CD Pipeline Works
+
+The pipeline automates testing, building, deployment, and verification.
+
+Pipeline Stages
+Checkout: Jenkins retrieves the latest source code from GitHub.
+Unit Tests: Jest runs inside a node:20-alpine container. Supertest tests the REST API, and pg-mem tests the SQL layer. The pipeline fails if test coverage is below 70%.
+Build Docker Image: Jenkins builds the application image and tags it with the build number and latest. The build number is displayed in the application footer.
+Push to Docker Hub: Jenkins pushes the image to the campustask repository.
+Deploy to Test: Without DB_HOST, deploy.sh starts a PostgreSQL container and the application container on port 8081. Test data is stored in a Docker volume and remains separate from production data.
+Automated Tests on Test: smoke-test.sh checks the application pages, verifies /health, and performs a complete create/read/update/delete cycle.
+Deploy to Production: Only builds from main are deployed. Jenkins connects to prod-server over SSH and runs deploy.sh with the RDS configuration. Database settings are passed over the SSH connection rather than exposed directly on the command line.
+Verify Production: The same smoke tests run against the production public IP address.
+CloudWatch Monitoring: The CampusTask-Production dashboard displays CPU and network activity on the production EC2 instance while the new container starts.
+Automatic Rollback
+
+If the application health check fails because of an application crash or database connectivity problem, deploy.sh restores the previous image and the Jenkins build fails.
+
+This helps prevent a failed deployment from leaving the production application running an unhealthy version.
+
+4. Project Levels Covered
+Level	Requirement	How It Is Satisfied
+Level 1	Four-server pipeline: code repository, CI/build, testing, and production	GitHub, Jenkins, test environment, and production EC2
+Level 2	Instrumentation of the production server	AWS CloudWatch dashboard and agent for CPU, memory, network, and disk metrics
+Level 3	Deploy a working application and verify it	CampusTask deployed to production EC2 with RDS; /health returns an OK response when the database is reachable
+Level 4	Test automation triggered by source code changes	A GitHub push webhook triggers the Jenkins pipeline automatically
+5. Demo Script (Presentation)
+
+Use the following sequence to demonstrate the CI/CD pipeline.
+
+Step 1: Show the Production Application
+Open the production website.
+Show the build number in the footer.
+Confirm that the database status displays up.
+Add a new task to demonstrate that the application works.
+Step 2: Show CloudWatch Monitoring
+Open the CampusTask-Production dashboard.
+Explain the baseline CPU and network activity.
+If configured, show memory and disk utilization metrics.
+Step 3: Trigger a Deployment
+Change a heading, colour, or other visible element in the source code.
+Commit and push the changes to the main branch.
+Step 4: Demonstrate Jenkins Automation
+Show the GitHub webhook triggering Jenkins.
+Follow the pipeline stages as they execute.
+Show the test results, coverage report, and Docker Hub image tag.
+Step 5: Verify the Production Deployment
+Show the CPU activity on EC2 as the new container starts.
+Refresh the production website.
+Confirm that the build number has increased.
+Verify that the previously created task is still present, demonstrating that production data is stored in RDS rather than inside the application container.
+Step 6: Demonstrate a Failed Test
+Add a test that intentionally fails.
+Push the changes.
+Show that the pipeline stops before deployment.
+Step 7: Demonstrate Rollback
+In a controlled demonstration, introduce a change that causes the application health check to fail.
+Push the change and observe the deployment process.
+Show deploy.sh restoring the previous image.
+Confirm that the previous working application remains available.
+Perform failure and rollback demonstrations in the testing environment first whenever possible. If demonstrating in production, use an approved maintenance window and a verified recovery plan.
+
+8. Architecture Summary
+┌──────────────────────────────────────────────────────────────┐
+│                  EC2 #1 — Jenkins + Test                    │
+│                  Amazon Linux 2023, t3.small                │
+│                  30 GB storage                              │
+│                                                              │
+│   ┌──────────────┐    ┌──────────────┐   ┌────────────────┐  │
+│   │ Jenkins      │    │ Test App     │   │ Test PostgreSQL│  │
+│   │ Port 8080    │    │ Port 8081    │──►│ Port 5432      │  │
+│   └──────────────┘    └──────────────┘   └────────────────┘  │
+│          │                                                   │
+└──────────┼───────────────────────────────────────────────────┘
+           │
+           │ Jenkins deploys over SSH
+           ▼
+┌──────────────────────────────────────────────────────────────┐
+│                EC2 #2 — Production + CloudWatch             │
+│                Amazon Linux 2023, t3.micro                  │
+│                8 GB storage                                 │
+│                                                              │
+│   ┌────────────────┐       ┌────────────────┐               │
+│   │ Production App │──────►│ Amazon RDS     │               │
+│   │ Port 80        │       │ PostgreSQL     │               │
+│   └───────┬────────┘       └────────────────┘               │
+│           │                                                  │
+│           └──────────► CloudWatch                            │
+│                        CPU, memory, network, disk            │
+└──────────────────────────────────────────────────────────────┘
+
+End-to-End Workflow
+Developer
+   |
+   | git push
+   v
+GitHub Repository
+   |
+   | Webhook
+   v
+Jenkins Pipeline
+   |
+   ├── Checkout Source Code
+   ├── Run Unit Tests
+   ├── Build Docker Image
+   ├── Push Image to Docker Hub
+   ├── Deploy to Test Environment
+   ├── Run Smoke Tests
+   ├── Deploy to Production (main only)
+   ├── Verify Production Health
+   └── Roll Back on Deployment Failure
+                |
+                v
+       AWS EC2 + Amazon RDS
+                |
+                v
+          AWS CloudWatch
+
+Conclusion
+CampusTask demonstrates an end-to-end CI/CD workflow using GitHub, Jenkins, Docker, Docker Hub, AWS EC2, Amazon RDS, and CloudWatch.
+
+The pipeline automates source code checkout, testing, image building, deployment, health verification, and rollback. The separate testing and production environments help isolate test data from production data, while Amazon RDS provides persistent production storage and CloudWatch supports operational monitoring.
+
+This project demonstrates automated software delivery, infrastructure configuration, database integration, deployment verification, monitoring, and recovery from failed deployments.
