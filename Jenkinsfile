@@ -14,7 +14,7 @@ pipeline {
     DOCKERHUB_USER = 'jiaqi0623'          // <-- change
     IMAGE          = "${DOCKERHUB_USER}/campustask"
     TAG            = "${BUILD_NUMBER}"
-    PROD_HOST      = 'ec2-user@54.179.140.19'      // <-- change (production EC2 instance)
+    PROD_HOST      = 'ec2-user@13.213.98.45'      // <-- change (production EC2 instance)
     TEST_PORT      = '8081'
     PROD_PORT      = '80'
     DB_NAME        = 'campustask'                       // initial database name created in RDS
