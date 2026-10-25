@@ -3,7 +3,7 @@ const { Pool } = require('pg');
 
 const COLUMNS = 'id, title, done, created_at';
 
-// Builds a connection pool from environment variables (see README)
+// Builds a connection pool from environment variables 
 function createPool(env) {
   const pool = new Pool({
     host: env.DB_HOST,

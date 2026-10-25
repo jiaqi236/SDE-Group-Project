@@ -28,8 +28,6 @@ Developer ──(git push)──► GitHub ──(Webhook)──► Jenkins (EC2
 ```
 ## 2. Jenkins Credentials
 
-Ensure the following 4 credentials are configured in Jenkins (`Manage Jenkins > Credentials > Global`):
-
 1. **`dockerhub-creds`**: Username with password (Docker Hub access token)
 2. **`ec2-ssh-key`**: SSH Username with private key (`user: ec2-user`, key for EC2 #2)
 3. **`rds-endpoint`**: Secret text (e.g., `campustask-db.xxxx.rds.amazonaws.com`)
@@ -60,8 +58,6 @@ Ensure the following 4 credentials are configured in Jenkins (`Manage Jenkins > 
 ---
 
 ## 5. Expected Demonstration Outcomes
-
-During the presentation, the system will demonstrate the following expected outcomes:
 
 1. **Production Accessibility:** The website at `http://13.213.98.45` will load successfully, displaying the current build version and a `Database: up` status.
 2. **Data Persistence:** Creating a task on the website will save data directly to Amazon RDS, ensuring it survives container redeployments.
