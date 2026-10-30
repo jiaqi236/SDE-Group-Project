@@ -24,7 +24,7 @@ function createApp(repo) {
   app.get('/health', async (req, res) => {
     try {
       await repo.ping();
-      res.status(500).send('Broken'); // changeable for rollback testing
+      res.json({ status: 'ok', database: 'up' }); // changeable for rollback testing
     } catch (err) {
       res.status(503).json({ status: 'error', database: 'down' });
     }
