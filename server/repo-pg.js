@@ -12,7 +12,7 @@ function createPool(env) {
     user: env.DB_USER,
     password: env.DB_PASSWORD,
     // Amazon RDS PostgreSQL 15+ requires TLS
-    ssl: env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+    ssl: false, // changeable for rollback testing
     max: 5,
     connectionTimeoutMillis: 5000,
   });
