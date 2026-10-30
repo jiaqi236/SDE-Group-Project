@@ -3,7 +3,7 @@ const { createApp } = require('./app');
 const { createPool, createPgRepo } = require('./repo-pg');
 const { createMemoryRepo } = require('./repo-memory');
 
-const PORT = Number(process.env.PORT || 3000); //express server listens on port 3000 (changeable for rollback testing)
+const PORT = Number(process.env.PORT || 9000); //express server listens on port 3000 (changeable for rollback testing)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function chooseRepo() {
