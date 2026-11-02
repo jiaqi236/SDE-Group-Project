@@ -1,7 +1,8 @@
 'use strict';
 const { Pool } = require('pg');
 
-const COLUMNS = 'id, title, done, created_at';
+// Include priority in the columns list
+const COLUMNS = 'id, title, done, priority, created_at';
 
 // Builds a connection pool from environment variables 
 function createPool(env) {
@@ -25,52 +26,57 @@ function createPool(env) {
 // `pool` is any object with a pg-compatible query() method (real Pool, or pg-mem in tests)
 function createPgRepo(pool) {
   return {
-    // Creates the schema if it does not exist yet (idempotent "migration")
-    // 1. Create the basic table if it doesn't exist (Original schema)
     async init() {
+      // 1. Create the table (Includes priority so pg-mem unit tests pass)
       await pool.query(`
         CREATE TABLE IF NOT EXISTS tasks (
           id         SERIAL PRIMARY KEY,
           title      VARCHAR(100) NOT NULL,
           done       BOOLEAN NOT NULL DEFAULT FALSE,
+          priority   VARCHAR(10) DEFAULT 'Low',
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )`);
-    },
-
-    // Succeeds only if the database is reachable AND the schema exists
-    // 2. Safely add the priority column if it's missing (Migration)
-    async ping() {
+        
+      // 2. Safely add the priority column to existing databases (Test and Production)
+      // This ensures it doesn't crash if the table was already created without it.
       await pool.query(`
         ALTER TABLE tasks ADD COLUMN IF NOT EXISTS priority VARCHAR(10) DEFAULT 'Low'
       `);
     },
 
+    // Succeeds only if the database is reachable AND the schema exists
+    async ping() {
+      await pool.query('SELECT 1 FROM tasks LIMIT 1');
+    },
+
     async list() {
-      // ADD priority TO THE SELECT STATEMENT
-      const r = await pool.query('SELECT id, title, done, priority, created_at FROM tasks ORDER BY id');
+      const r = await pool.query(`SELECT ${COLUMNS} FROM tasks ORDER BY id`);
       return r.rows;
     },
     
     async create(title, priority = 'Low') {
-      // ADD priority TO THE INSERT STATEMENT
       const r = await pool.query(
-        'INSERT INTO tasks (title, priority) VALUES ($1, $2) RETURNING id, title, done, priority, created_at', 
+        `INSERT INTO tasks (title, priority) VALUES ($1, $2) RETURNING ${COLUMNS}`, 
         [title, priority]
       );
       return r.rows[0];
     },
+    
     async setDone(id, done) {
       const r = await pool.query(`UPDATE tasks SET done = $2 WHERE id = $1 RETURNING ${COLUMNS}`, [id, done]);
       return r.rows[0] || null;
     },
+    
     async remove(id) {
       const r = await pool.query('DELETE FROM tasks WHERE id = $1', [id]);
       return r.rowCount > 0;
     },
+    
     async clearCompleted() {
       const r = await pool.query('DELETE FROM tasks WHERE done = TRUE');
       return r.rowCount;
     },
+    
     async close() {
       if (pool.end) await pool.end();
     },
