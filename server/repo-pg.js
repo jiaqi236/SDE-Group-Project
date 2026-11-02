@@ -26,26 +26,31 @@ function createPool(env) {
 function createPgRepo(pool) {
   return {
     // Creates the schema if it does not exist yet (idempotent "migration")
-    // New Feature: Add priority column (priority   VARCHAR(10) DEFAULT 'Low')
+    // 1. Create the basic table if it doesn't exist (Original schema)
     async init() {
       await pool.query(`
         CREATE TABLE IF NOT EXISTS tasks (
           id         SERIAL PRIMARY KEY,
           title      VARCHAR(100) NOT NULL,
           done       BOOLEAN NOT NULL DEFAULT FALSE,
-          priority   VARCHAR(10) DEFAULT 'Low', 
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )`);
     },
+
     // Succeeds only if the database is reachable AND the schema exists
+    // 2. Safely add the priority column if it's missing (Migration)
     async ping() {
-      await pool.query('SELECT 1 FROM tasks LIMIT 1');
+      await pool.query(`
+        ALTER TABLE tasks ADD COLUMN IF NOT EXISTS priority VARCHAR(10) DEFAULT 'Low'
+      `);
     },
+
     async list() {
       // ADD priority TO THE SELECT STATEMENT
       const r = await pool.query('SELECT id, title, done, priority, created_at FROM tasks ORDER BY id');
       return r.rows;
     },
+    
     async create(title, priority = 'Low') {
       // ADD priority TO THE INSERT STATEMENT
       const r = await pool.query(

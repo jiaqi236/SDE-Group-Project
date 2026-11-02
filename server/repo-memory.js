@@ -8,11 +8,19 @@ function createMemoryRepo() {
     async init() {},
     async ping() {},
     async list() { return tasks.map((t) => ({ ...t })); },
-    async create(title, priority = 'Low') { // ADD priority HERE
-      const task = { id: nextId++, title, done: false, created_at: new Date().toISOString() };
+    
+    async create(title, priority = 'Low') { 
+      const task = { 
+        id: nextId++, 
+        title, 
+        done: false, 
+        priority: priority, // <-- ADD THIS LINE
+        created_at: new Date().toISOString() 
+      };
       tasks.push(task);
       return { ...task };
     },
+    
     async setDone(id, done) {
       const task = tasks.find((t) => t.id === id);
       if (!task) return null;
