@@ -54,6 +54,10 @@
       cb.addEventListener('change', async function () {
         try {
           const updated = await request('PATCH', API + '/' + t.id, { done: cb.checked });
+
+          // New Feature: Keep the priority when the task is updated!
+          updated.priority = t.priority; 
+          
           tasks = tasks.map(function (x) { return x.id === t.id ? updated : x; });
           showError('');
         } catch (e) { showError(e.message); await refresh().catch(function () {}); return; }

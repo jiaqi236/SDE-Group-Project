@@ -24,18 +24,18 @@ li .del { background: none; border: 0; color: #c0392b; font-size: 1.2rem; }
 footer { margin-top: 16px; color: #dbe4f5; font-size: .8rem; }
 
 .priority-badge {
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  border-radius: 4px;
+  font-size: 0.7rem;           /* Make the text slightly smaller */
+  padding: 2px 8px;            /* 2px top/bottom, 8px left/right */
+  border-radius: 12px;         /* Gives it a nice rounded pill shape */
   font-weight: bold;
   text-transform: uppercase;
+  display: inline-block;       
 
-  /* ADD THESE LINES TO ADJUST THE LENGTH: */
-  width: 10px;            
-  text-align: center;    
-  display: inline-block;  /* Ensures the width is applied properly */
-
+  width: auto;                 
+  margin-right: 10px;          /* Give it some space from the delete button */
+  white-space: nowrap;         /* Prevents the text from wrapping */
 }
+
 .priority-badge.high {
   background-color: #ffcccc;
   color: #cc0000;
