@@ -26,13 +26,13 @@ footer { margin-top: 16px; color: #dbe4f5; font-size: .8rem; }
 .priority-badge {
   font-size: 0.7rem;           /* Make the text slightly smaller */
   padding: 2px 8px;            /* 2px top/bottom, 8px left/right */
-  border-radius: 12px;         /* Gives it a nice rounded pill shape */
+  border-radius: 5px;         /* Gives it a nice rounded pill shape */
   font-weight: bold;
   text-transform: uppercase;
   display: inline-block;       
 
   width: auto;                 
-  margin-right: 10px;          /* Give it some space from the delete button */
+  text-align: center;         
   white-space: nowrap;         /* Prevents the text from wrapping */
 }
 
@@ -41,6 +41,6 @@ footer { margin-top: 16px; color: #dbe4f5; font-size: .8rem; }
   color: #cc0000;
 }
 .priority-badge.low {
-  background-color: #e5ffb8;
+  background-color: #CEF7D0;
   color: #355a19;
 }
