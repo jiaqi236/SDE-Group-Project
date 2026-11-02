@@ -31,16 +31,16 @@ footer { margin-top: 16px; color: #dbe4f5; font-size: .8rem; }
   text-transform: uppercase;
 
   /* ADD THESE LINES TO ADJUST THE LENGTH: */
-  width: 50px;            /* Forces the badge to be exactly 50px wide */
-  text-align: center;     /* Centers the text inside the badge */
+  width: 30px;            
+  text-align: center;    
   display: inline-block;  /* Ensures the width is applied properly */
-  
+
 }
 .priority-badge.high {
   background-color: #ffcccc;
   color: #cc0000;
 }
 .priority-badge.low {
-  background-color: #e0e0e0;
-  color: #74ff09;
+  background-color: #ccff75;
+  color: #355a19;
 }
