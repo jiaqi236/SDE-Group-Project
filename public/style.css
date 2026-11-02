@@ -25,7 +25,7 @@ footer { margin-top: 16px; color: #dbe4f5; font-size: .8rem; }
 
 .priority-badge {
   font-size: 0.7rem;           /* Make the text slightly smaller */
-  padding: 2px 8px;            /* 2px top/bottom, 8px left/right */
+  padding: 2px 2px;            /* 2px top/bottom, 8px left/right */
   border-radius: 5px;         /* Gives it a nice rounded pill shape */
   font-weight: bold;
   text-transform: uppercase;
