@@ -63,15 +63,11 @@
       const span = document.createElement('span');
       span.textContent = t.title;
 
-      // ==========================================
       // NEW FEATURE: PRIORITY BADGE
-      // (Delete these 4 lines if you want to show the app BEFORE the feature)
-      // ==========================================
       const priorityBadge = document.createElement('span');
       priorityBadge.textContent = t.priority || 'Low';
       priorityBadge.className = 'priority-badge ' + (t.priority === 'High' ? 'high' : 'low');
       priorityBadge.style.marginLeft = 'auto'; 
-      // ==========================================
 
       const del = document.createElement('button');
       del.className = 'del';
@@ -88,7 +84,7 @@
 
       li.appendChild(cb); 
       li.appendChild(span); 
-      li.appendChild(priorityBadge); // <-- NEW FEATURE ADDED HERE
+      li.appendChild(priorityBadge); // NEW FEATURE ADDED: Adding Badge to List
       li.appendChild(del);
       listEl.appendChild(li);
     });
@@ -102,17 +98,18 @@
     const problem = TaskLogic.validateTitle(input.value);
     if (problem) { showError(problem); return; }
 
-    // ==========================================
     // NEW FEATURE: GET PRIORITY FROM DROPDOWN
-    // ==========================================
     const priority = document.getElementById('task-priority').value;
-
+    
     try {
-      // Send priority to the API
+      // NEW FEATURE: Simulating the save
       const created = await request('POST', API, { title: input.value, priority: priority });
+
+      // REVERTED TO ORIGINAL: Send only the title: const created = await request('POST', API, { title: input.value }); 
+
       
       // Simulate saving it to the UI
-      created.priority = priority; 
+      created.priority = priority; // NEW FEATURE ADDED HERE
 
       tasks.push(created);
       input.value = '';
