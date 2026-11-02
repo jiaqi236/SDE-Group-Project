@@ -57,7 +57,7 @@
 
           // New Feature: Keep the priority when the task is updated!
           updated.priority = t.priority; 
-          
+
           tasks = tasks.map(function (x) { return x.id === t.id ? updated : x; });
           showError('');
         } catch (e) { showError(e.message); await refresh().catch(function () {}); return; }
@@ -71,7 +71,6 @@
       const priorityBadge = document.createElement('span');
       priorityBadge.textContent = t.priority || 'Low';
       priorityBadge.className = 'priority-badge ' + (t.priority === 'High' ? 'high' : 'low');
-      priorityBadge.style.marginLeft = 'auto'; 
 
       const del = document.createElement('button');
       del.className = 'del';

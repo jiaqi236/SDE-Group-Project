@@ -24,16 +24,15 @@ li .del { background: none; border: 0; color: #c0392b; font-size: 1.2rem; }
 footer { margin-top: 16px; color: #dbe4f5; font-size: .8rem; }
 
 .priority-badge {
-  font-size: 0.7rem;           /* Make the text slightly smaller */
-  padding: 2px 2px;            /* 2px top/bottom, 8px left/right */
-  border-radius: 5px;         /* Gives it a nice rounded pill shape */
+  font-size: 0.65rem;         
+  padding: 2px 8px;           
+  border-radius: 12px;        
   font-weight: bold;
   text-transform: uppercase;
   display: inline-block;       
-
   width: auto;                 
-  text-align: center;         
-  white-space: nowrap;         /* Prevents the text from wrapping */
+  margin-right: 10px;          /* Pushes the delete button slightly away */
+  margin-left: 10px;           /* Pushes the badge away from the task title */
 }
 
 .priority-badge.high {
