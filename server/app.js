@@ -78,6 +78,23 @@ function createApp(repo) {
     res.status(500).json({ error: 'Internal server error.' });
   });
 
+  // Add priority to the task creation form submission
+  form.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const title = input.value;
+  const priority = document.getElementById('task-priority').value; // GET PRIORITY
+
+  try {
+    const created = await request('POST', API, { title: title, priority: priority }); // SEND IT
+    tasks.push(created);
+    input.value = '';
+    showError('');
+    render();
+  } catch (err) {
+    showError(err.message);
+  }
+});
+
   return app;
 }
 

@@ -26,12 +26,14 @@ function createPool(env) {
 function createPgRepo(pool) {
   return {
     // Creates the schema if it does not exist yet (idempotent "migration")
+    // New Feature: Add priority column (priority   VARCHAR(10) DEFAULT 'Low')
     async init() {
       await pool.query(`
         CREATE TABLE IF NOT EXISTS tasks (
           id         SERIAL PRIMARY KEY,
           title      VARCHAR(100) NOT NULL,
           done       BOOLEAN NOT NULL DEFAULT FALSE,
+          priority   VARCHAR(10) DEFAULT 'Low', 
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )`);
     },

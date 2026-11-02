@@ -1,4 +1,4 @@
-# Local development with a real PostgreSQL:  docker compose up --build  ->  http://localhost:8080
+# Local (your own laptop) development with a real PostgreSQL:  docker compose up --build  ->  http://localhost:8080
 services:
   db:
     image: postgres:16-alpine

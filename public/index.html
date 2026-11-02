@@ -13,6 +13,13 @@
     <p class="subtitle">A simple task manager for students</p>
     <form id="task-form" autocomplete="off">
       <input id="task-input" type="text" placeholder="Add a new task..." maxlength="100" aria-label="New task">
+
+        <!-- New Feature: Add priority selection -->
+      <select id="task-priority">
+        <option value="Low">Low</option>
+        <option value="High">High</option>
+      </select>
+
       <button type="submit">Add</button>
     </form>
     <p id="error" class="error" role="alert"></p>
