@@ -42,11 +42,16 @@ function createPgRepo(pool) {
       await pool.query('SELECT 1 FROM tasks LIMIT 1');
     },
     async list() {
-      const r = await pool.query(`SELECT ${COLUMNS} FROM tasks ORDER BY id`);
+      // ADD priority TO THE SELECT STATEMENT
+      const r = await pool.query('SELECT id, title, done, priority, created_at FROM tasks ORDER BY id');
       return r.rows;
     },
-    async create(title) {
-      const r = await pool.query(`INSERT INTO tasks (title) VALUES ($1) RETURNING ${COLUMNS}`, [title]);
+    async create(title, priority = 'Low') {
+      // ADD priority TO THE INSERT STATEMENT
+      const r = await pool.query(
+        'INSERT INTO tasks (title, priority) VALUES ($1, $2) RETURNING id, title, done, priority, created_at', 
+        [title, priority]
+      );
       return r.rows[0];
     },
     async setDone(id, done) {

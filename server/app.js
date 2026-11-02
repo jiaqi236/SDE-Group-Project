@@ -36,9 +36,11 @@ function createApp(repo) {
 
   app.post('/api/tasks', wrap(async (req, res) => {
     const title = req.body && req.body.title;
+    const priority = req.body && req.body.priority ? req.body.priority : 'Low'; // Get priority
     const error = validateTitle(title);
     if (error) return res.status(400).json({ error });
-    res.status(201).json(await repo.create(title.trim()));
+    // Pass priority to the repo
+    res.status(201).json(await repo.create(title.trim(), priority));
   }));
 
   // Must be registered before /api/tasks/:id

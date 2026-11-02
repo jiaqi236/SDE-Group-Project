@@ -8,7 +8,7 @@ function createMemoryRepo() {
     async init() {},
     async ping() {},
     async list() { return tasks.map((t) => ({ ...t })); },
-    async create(title) {
+    async create(title, priority = 'Low') { // ADD priority HERE
       const task = { id: nextId++, title, done: false, created_at: new Date().toISOString() };
       tasks.push(task);
       return { ...task };

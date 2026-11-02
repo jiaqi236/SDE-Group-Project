@@ -110,9 +110,6 @@
 
       //const created = await request('POST', API, { title: input.value }); 
 
-      // Simulate saving it to the UI
-      created.priority = priority; // NEW FEATURE ADDED HERE
-
       tasks.push(created);
       input.value = '';
       showError('');
