@@ -71,7 +71,6 @@
       const priorityBadge = document.createElement('span');
       priorityBadge.textContent = t.priority || 'Low';
       priorityBadge.className = 'priority-badge ' + (t.priority === 'High' ? 'high' : 'low');
-
       const del = document.createElement('button');
       del.className = 'del';
       del.textContent = '×';

@@ -30,7 +30,8 @@ footer { margin-top: 16px; color: #dbe4f5; font-size: .8rem; }
   font-weight: bold;
   text-transform: uppercase;
   display: inline-block;       
-  width: auto;      
+  width: fit-content; 
+  flex-shrink: 0;       
   text-align: center;           
 }
 
