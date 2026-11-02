@@ -30,9 +30,8 @@ footer { margin-top: 16px; color: #dbe4f5; font-size: .8rem; }
   font-weight: bold;
   text-transform: uppercase;
   display: inline-block;       
-  width: auto;                 
-  margin-right: 10px;          /* Pushes the delete button slightly away */
-  margin-left: 10px;           /* Pushes the badge away from the task title */
+  width: auto;      
+  text-align: center;           
 }
 
 .priority-badge.high {
