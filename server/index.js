@@ -32,6 +32,8 @@ async function initWithRetry(repo, attempts = 30, delayMs = 2000) {
 }
 
 async function main() {
+   // ADD THE BREAK HERE:
+  throw new Error("Simulating a startup failure in the Test environment!");
   const repo = chooseRepo();
   // Listen first: /health returns 503 until the database is reachable, so deploy.sh can decide to roll back
   const server = createApp(repo).listen(PORT, () => console.log(`CampusTask listening on port ${PORT}`));
