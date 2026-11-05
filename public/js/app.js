@@ -87,7 +87,7 @@
 
       li.appendChild(cb); 
       li.appendChild(span); 
-      //li.appendChild(priorityBadge); // NEW FEATURE ADDED: Adding Badge to List
+      li.appendChild(priorityBadge); // NEW FEATURE ADDED: Adding Badge to List
       li.appendChild(del);
       listEl.appendChild(li);
     });
