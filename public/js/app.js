@@ -56,7 +56,7 @@
           const updated = await request('PATCH', API + '/' + t.id, { done: cb.checked });
 
           // New Feature: Keep the priority when the task is updated
-          //**updated.priority = t.priority; 
+          updated.priority = t.priority; 
 
           tasks = tasks.map(function (x) { return x.id === t.id ? updated : x; });
           showError('');
@@ -68,9 +68,9 @@
       span.textContent = t.title;
 
       // NEW FEATURE: PRIORITY BADGE
-      /*const priorityBadge = document.createElement('span');
+      const priorityBadge = document.createElement('span');
       priorityBadge.textContent = t.priority || 'Low';
-      priorityBadge.className = 'priority-badge ' + (t.priority === 'High' ? 'high' : 'low');*/
+      priorityBadge.className = 'priority-badge ' + (t.priority === 'High' ? 'high' : 'low');
 
       const del = document.createElement('button');
       del.className = 'del';
@@ -87,7 +87,7 @@
 
       li.appendChild(cb); 
       li.appendChild(span); 
-      //*li.appendChild(priorityBadge); // NEW FEATURE ADDED: Adding Badge to List
+      li.appendChild(priorityBadge); // NEW FEATURE ADDED: Adding Badge to List
       li.appendChild(del);
       listEl.appendChild(li);
     });
@@ -102,13 +102,13 @@
     if (problem) { showError(problem); return; }
 
     // NEW FEATURE: GET PRIORITY FROM DROPDOWN
-    //**const priority = document.getElementById('task-priority').value;
+    const priority = document.getElementById('task-priority').value;
     
     try {
       // NEW FEATURE: Simulating the save
-      //**const created = await request('POST', API, { title: input.value, priority: priority });
+      const created = await request('POST', API, { title: input.value, priority: priority });
 
-      const created = await request('POST', API, { title: input.value }); 
+      //const created = await request('POST', API, { title: input.value }); 
 
       tasks.push(created);
       input.value = '';
