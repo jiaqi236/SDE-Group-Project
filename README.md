@@ -29,8 +29,8 @@ Developer ──(git push)──► GitHub ──(Webhook)──► Jenkins (EC2
 ## 2. Jenkins Credentials
 
 1. **`dockerhub-creds`**: Username with password (Docker Hub access token)
-2. **`ec2-ssh-key`**: SSH Username with private key (`user: ec2-user`, key for EC2 #2)
-3. **`rds-endpoint`**: Secret text (e.g., `campustask-db.xxxx.rds.amazonaws.com`)
+2. **`ec2-ssh-key`**: SSH Username with private key 
+3. **`rds-endpoint`**: Secret text 
 4. **`rds-db-creds`**: Username with password (RDS master credentials)
 
 ---
